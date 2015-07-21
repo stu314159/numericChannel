@@ -169,6 +169,7 @@ void OpenChannel3D::D3Q15_process_slices(bool isEven, const int firstSlice, cons
     int Nx = this->Nx;
     float omega = this->omega;
     int nnodes = this->nnodes;
+    float rho_lbm = this->rho_lbm;
     
     dummyUse(nnodes);
    
@@ -182,7 +183,7 @@ void OpenChannel3D::D3Q15_process_slices(bool isEven, const int firstSlice, cons
         for(int Y=0;Y<Ny;Y++){
             for(int X=0;X<Nx;X++){
                 float f0,f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14;
-                float cu,rho,ux,uy,uz,fEq,dz;
+                float cu,rho,ux,uy,uz,w;
                 int X_t,Y_t,Z_t,tid_t,tid;
                 
                 tid=X+Y*Nx+Z*Nx*Ny;
@@ -203,178 +204,209 @@ void OpenChannel3D::D3Q15_process_slices(bool isEven, const int firstSlice, cons
                 uy=f3-f4+f7+f8-f9-f10+f11+f12-f13-f14; uy/=rho;
                 uz=f5-f6+f7+f8+f9+f10-f11-f12-f13-f14; uz/=rho;
                 
-                //if it's on the inl or onl, update
-                
-                if((inl[tid]==1)||(onl[tid]==1)){
-                    
-                    dz=u_bc[tid]-uz;
-                    //speed 1 ex=1 ey=ez=0. w=1./9.
-                    cu=3.F*(1.F)*(-ux);
-                    f1+=(1.F/9.F)*rho*cu;
-                    
-                    //speed 2 ex=-1 ey=ez=0. w=1./9.
-                    cu=3.F*(-1.F)*(-ux);
-                    f2+=(1.F/9.F)*rho*cu;
-                    
-                    //speed 3 ey=1; ex=ez=0; w=1./9.
-                    cu=3.F*(1.F)*(-uy);
-                    f3+=(1.F/9.F)*rho*cu;
-                    
-                    //speed 4 ey=-1; ex=ez=0; w=1./9.
-                    cu=3.F*(-1.F)*(-uy);
-                    f4+=(1.F/9.F)*rho*cu;
-                    
-                    //speed 5 ex=ey=0; ez=1; w=1./9.
-                    cu=3.F*(1.F)*(dz);
-                    f5+=(1.F/9.F)*rho*cu;
-                    
-                    //speed 6 ex=ey=0; ez=-1; w=1./9.
-                    cu=3.F*(-1.F)*(dz);
-                    f6+=(1.F/9.F)*rho*cu;
-                    
-                    //speed 7 ex=ey=ez=1; w=1./72.
-                    cu=3.F*((1.F)*-ux+(1.F)*(-uy)+(1.F)*dz);
-                    f7+=(1.F/72.F)*rho*cu;
-                    
-                    //speed 8 ex=-1 ey=ez=1; w=1./72.
-                    cu=3.F*((-1.F)*-ux+(1.F)*(-uy)+(1.F)*dz);
-                    f8+=(1.F/72.F)*rho*cu;
-                    
-                    //speed 9 ex=1 ey=-1 ez=1
-                    cu=3.0F*((1.F)*-ux+(-1.F)*(-uy)+(1.F)*dz);
-                    f9+=(1.F/72.F)*rho*cu;
-                    
-                    //speed 10 ex=-1 ey=-1 ez=1
-                    cu=3.0F*((-1.F)*-ux+(-1.F)*(-uy)+(1.F)*dz);
-                    f10+=(1.F/72.F)*rho*cu;
-                    
-                    //speed 11 ex=1 ey=1 ez=-1
-                    cu=3.0F*((1.F)*-ux +(1.F)*(-uy)+(-1.F)*dz);
-                    f11+=(1.F/72.F)*rho*cu;
-                    
-                    //speed 12 ex=-1 ey=1 ez=-1
-                    cu=3.0F*((-1.F)*-ux+(1.F)*(-uy)+(-1.F)*dz);
-                    f12+=(1.F/72.F)*rho*cu;
-                    
-                    //speed 13 ex=1 ey=-1 ez=-1 w=1./72.
-                    cu=3.0F*((1.F)*-ux+(-1.F)*(-uy)+(-1.F)*dz);
-                    f13+=(1.F/72.F)*rho*cu;
-                    
-                    //speed 14 ex=ey=ez=-1 w=1./72.
-                    cu=3.0F*((-1.F)*-ux + (-1.F)*(-uy) +(-1.F)*dz);
-                    f14+=(1.F/72.F)*rho*cu;
-                    
-                    ux=0.; uy=0.; uz=u_bc[tid];
-                }
-                
-                if(snl[tid]==1){
-                    // 1--2
-                    cu=f2; f2=f1; f1=cu;
-                    //3--4
-                    cu=f4; f4=f3; f3=cu;
-                    //5--6
-                    cu=f6; f6=f5; f5=cu;
-                    //7--14
-                    cu=f14; f14=f7; f7=cu;
-                    //8--13
-                    cu=f13; f13=f8; f8=cu;
-                    //9--12
-                    cu=f12; f12=f9; f9=cu;
-                    //10--11
-                    cu=f11; f11=f10; f10=cu;
-                    
-                    
-                }else{
-                    fEq=rho*(2.F/9.F)*(1.F-1.5F*(ux*ux+uy*uy+uz*uz));
-                    f0=f0-omega*(f0-fEq);
-                    
-                    //speed 1 ex=1 ey=ez=0 w=1./9.
-                    cu=3.F*(1.F*ux);
-                    fEq=rho*(1.F/9.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f1=f1-omega*(f1-fEq);
-                    
-                    //speed 2 ex=-1 ey=ez=0 w=1./9.
-                    cu=3.F*((-1.F)*ux);
-                    fEq=rho*(1.F/9.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f2=f2-omega*(f2-fEq);
-                    
-                    //speed 3 ex=0 ey=1 ez=0 w=1./9.
-                    cu=3.F*(1.F*uy);
-                    fEq=rho*(1.F/9.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f3=f3-omega*(f3-fEq);
-                    
-                    //speed 4 ex=0 ey=-1 ez=0 w=1./9.
-                    cu=3.F*(-1.F*uy);
-                    fEq=rho*(1.F/9.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f4=f4-omega*(f4-fEq);
-                    
-                    //speed 5 ex=ey=0 ez=1 w=1./9.
-                    cu=3.F*(1.F*uz);
-                    fEq=rho*(1.F/9.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f5=f5-omega*(f5-fEq);
-                    
-                    //speed 6 ex=ey=0 ez=-1 w=1./9.
-                    cu=3.F*(-1.F*uz);
-                    fEq=rho*(1.F/9.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f6=f6-omega*(f6-fEq);
-                    
-                    //speed 7 ex=ey=ez=1 w=1./72.
-                    cu=3.F*(ux+uy+uz);
-                    fEq=rho*(1.F/72.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f7=f7-omega*(f7-fEq);
-                    
-                    //speed 8 ex=-1 ey=ez=1 w=1./72.
-                    cu=3.F*(-ux+uy+uz);
-                    fEq=rho*(1.F/72.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f8=f8-omega*(f8-fEq);
-                    
-                    //speed 9 ex=1 ey=-1 ez=1 w=1./72.
-                    cu=3.F*(ux-uy+uz);
-                    fEq=rho*(1.F/72.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f9=f9-omega*(f9-fEq);
-                    
-                    //speed 10 ex=-1 ey=-1 ez=1 w=1/72
-                    cu=3.F*(-ux-uy+uz);
-                    fEq=rho*(1.F/72.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f10=f10-omega*(f10-fEq);
-                    
-                    //speed 11 ex=1 ey=1 ez=-1 w=1/72
-                    cu=3.F*(ux+uy-uz);
-                    fEq=rho*(1.F/72.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f11=f11-omega*(f11-fEq);
-                    
-                    //speed 12 ex=-1 ey=1 ez=-1 w=1/72
-                    cu=3.F*(-ux+uy-uz);
-                    fEq=rho*(1.F/72.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f12=f12-omega*(f12-fEq);
-                    
-                    //speed 13 ex=1 ey=ez=-1 w=1/72
-                    cu=3.F*(ux-uy-uz);
-                    fEq=rho*(1.F/72.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f13=f13-omega*(f13-fEq);
-                    
-                    //speed 14 ex=ey=ez=-1 w=1/72
-                    cu=3.F*(-ux-uy-uz);
-                    fEq=rho*(1.F/72.F)*(1.F+cu+0.5F*(cu*cu)-
-                    1.5F*(ux*ux+uy*uy+uz*uz));
-                    f14=f14-omega*(f14-fEq);
-                    
-                    
-                    
-                }
+                	// set macroscopic boundary conditions
+	if(inl[tid]==1){
+          ux=0;uy=0; uz=u_bc[tid];
+          //set rho based on uz
+          rho = (1./(1.-uz))*(2.0*(f6+f11+f12+f13+f14)+(f0+f1+f2+f3+f4));
+        }
+        if(onl[tid]==1){
+          ux=0.; uy=0.; rho=rho_lbm;
+          uz = -1.+((2.*(f5+f7+f8+f9+f10)+(f0+f1+f2+f3+f4)))/rho;
+        }
+        if(snl[tid]==1){
+          ux=0.; uy=0.; uz=0.;
+        }
+	
+	
+	 //everyone compute equilibrium
+	float fe0,fe1,fe2,fe3,fe4,fe5,fe6,fe7,fe8,fe9,fe10,fe11,fe12,fe13,fe14;
+	//speed 0 ex=ey=ez=0 w=2./9.
+	
+	fe0=rho*(2./9.)*(1.-1.5*(ux*ux+uy*uy+uz*uz));
+	
+
+	//speed 1 ex=1 ey=ez=0 w=1./9.
+	cu=3.*(1.*ux);
+	fe1=rho*(1./9.)*(1.+cu+0.5*(cu*cu)-
+			1.5*(ux*ux+uy*uy+uz*uz));
+      
+
+	//speed 2 ex=-1 ey=ez=0 w=1./9.
+	cu=3.*((-1.)*ux);
+	fe2=rho*(1./9.)*(1.+cu+0.5*(cu*cu)-
+			1.5*(ux*ux+uy*uy+uz*uz));
+      
+
+	//speed 3 ex=0 ey=1 ez=0 w=1./9.
+	cu=3.*(1.*uy);
+	fe3=rho*(1./9.)*(1.+cu+0.5*(cu*cu)-
+			1.5*(ux*ux+uy*uy+uz*uz));
+      
+
+	//speed 4 ex=0 ey=-1 ez=0 w=1./9.
+	cu=3.*(-1.*uy);
+	fe4=rho*(1./9.)*(1.+cu+0.5*(cu*cu)-
+			1.5*(ux*ux+uy*uy+uz*uz));
+	
+
+	//speed 5 ex=ey=0 ez=1 w=1./9.
+	cu=3.*(1.*uz);
+	fe5=rho*(1./9.)*(1.+cu+0.5*(cu*cu)-
+			1.5*(ux*ux+uy*uy+uz*uz));
+	
+
+	//speed 6 ex=ey=0 ez=-1 w=1./9.
+	cu=3.*(-1.*uz);
+	fe6=rho*(1./9.)*(1.+cu+0.5*(cu*cu)-
+			1.5*(ux*ux+uy*uy+uz*uz));
+	
+	//speed 7 ex=ey=ez=1 w=1./72.
+	cu=3.*(ux+uy+uz);
+	fe7=rho*(1./72.)*(1.+cu+0.5*(cu*cu)-
+			  1.5*(ux*ux+uy*uy+uz*uz));
+      
+
+	//speed 8 ex=-1 ey=ez=1 w=1./72.
+	cu=3.*(-ux+uy+uz);
+	fe8=rho*(1./72.)*(1.+cu+0.5*(cu*cu)-
+			  1.5*(ux*ux+uy*uy+uz*uz));
+	
+
+	//speed 9 ex=1 ey=-1 ez=1 w=1./72.
+	cu=3.*(ux-uy+uz);
+	fe9=rho*(1./72.)*(1.+cu+0.5*(cu*cu)-
+			  1.5*(ux*ux+uy*uy+uz*uz));
+	
+
+	//speed 10 ex=-1 ey=-1 ez=1 w=1/72
+	cu=3.*(-ux-uy+uz);
+	fe10=rho*(1./72.)*(1.+cu+0.5*(cu*cu)-
+			  1.5*(ux*ux+uy*uy+uz*uz));
+      
+
+	//speed 11 ex=1 ey=1 ez=-1 w=1/72
+	cu=3.*(ux+uy-uz);
+	fe11=rho*(1./72.)*(1.+cu+0.5*(cu*cu)-
+			  1.5*(ux*ux+uy*uy+uz*uz));
+	
+
+	//speed 12 ex=-1 ey=1 ez=-1 w=1/72
+	cu=3.*(-ux+uy-uz);
+	fe12=rho*(1./72.)*(1.+cu+0.5*(cu*cu)-
+			  1.5*(ux*ux+uy*uy+uz*uz));
+      
+
+	//speed 13 ex=1 ey=ez=-1 w=1/72
+	cu=3.*(ux-uy-uz);
+	fe13=rho*(1./72.)*(1.+cu+0.5*(cu*cu)-
+			  1.5*(ux*ux+uy*uy+uz*uz));
+      
+
+	//speed 14 ex=ey=ez=-1 w=1/72
+	cu=3.*(-ux-uy-uz);
+	fe14=rho*(1./72.)*(1.+cu+0.5*(cu*cu)-
+			  1.5*(ux*ux+uy*uy+uz*uz));
+	
+	// if on inlet or outlet, compute and bounce-back non-equilibrium part of f.
+	if((inl[tid]==1)|(onl[tid]==1)){
+
+	  float ft1,ft2,ft3,ft4,ft5,ft6,ft7,ft8,ft9,ft10,ft11,ft12,ft13,ft14;
+	  if(inl[tid]==1){
+	    //adjust fIn for the unknown velocities: 5,7,8,9,10
+	    //bounce-back of non-equilibrium parts
+	    //f5, bb_spd=f6
+	    f5=fe5+(f6-fe6); //fIn[5*nnodes+tid]=f5;
+	    //f7, bb_spd=f14
+	    f7=fe7+(f14-fe14); //fIn[7*nnodes+tid]=f7;
+	    //f8, bb_spd=f13
+	    f8=fe8+(f13-fe13); //fIn[8*nnodes+tid]=f8;
+	    //f9, bb_spd=f12
+	    f9=fe9+(f12-fe12); //fIn[9*nnodes+tid]=f9;
+	    //f10, bb_spd=f11
+	    f10=fe10+(f11-fe11); //fIn[10*nnodes+tid]=f10;
+	  }else{
+	    f6=fe6+(f5-fe5); 
+	    f11=fe11+(f10-fe10); 
+	    f12=fe12+(f9-fe9); 
+	    f13=fe13+(f8-fe8); 
+	    f14=fe14+(f7-fe7); 
+
+	  }
+	  //ft0=f0-fe0;
+	  ft1=f1-fe1; 
+	  ft2=f2-fe2;
+	  ft3=f3-fe3;
+	  ft4=f4-fe4;
+	  ft5=f5-fe5;
+	  ft6=f6-fe6;
+	  ft7=f7-fe7;
+	  ft8=f8-fe8;
+	  ft9=f9-fe9;
+	  ft10=f10-fe10;
+	  ft11=f11-fe11;
+	  ft12=f12-fe12;
+	  ft13=f13-fe13;
+	  ft14=f14-fe14;
+
+	  //now, multiply by f# = ((ft#)*Q_flat)*Q_flat'
+	  f0= - ft1/3. - ft2/3. - ft3/3. - ft4/3. - ft5/3. - ft6/3. - ft7 - ft8 - ft9 - ft10 - ft11 - ft12 - ft13 - ft14; 
+	  f1=(2.*ft1)/3. + (2.*ft2)/3. - ft3/3. - ft4/3. - ft5/3. - ft6/3.; 
+	  f2=(2.*ft1)/3. + (2.*ft2)/3. - ft3/3. - ft4/3. - ft5/3. - ft6/3.; 
+	  f3=(2.*ft3)/3. - ft2/3. - ft1/3. + (2.*ft4)/3. - ft5/3. - ft6/3.; 
+	  f4=(2.*ft3)/3. - ft2/3. - ft1/3. + (2.*ft4)/3. - ft5/3. - ft6/3.; 
+	  f5=(2.*ft5)/3. - ft2/3. - ft3/3. - ft4/3. - ft1/3. + (2.*ft6)/3.; 
+	  f6=(2.*ft5)/3. - ft2/3. - ft3/3. - ft4/3. - ft1/3. + (2.*ft6)/3.; 
+	  f7=(2.*ft1)/3. + (2.*ft2)/3. + (2.*ft3)/3. + (2.*ft4)/3. + (2.*ft5)/3. + (2.*ft6)/3. + 8.*ft7 + 8.*ft14;
+	  f8= (2.*ft1)/3. + (2.*ft2)/3. + (2.*ft3)/3. + (2.*ft4)/3. + (2.*ft5)/3. + (2.*ft6)/3. + 8.*ft8 + 8.*ft13;
+	  f9= (2.*ft1)/3. + (2.*ft2)/3. + (2.*ft3)/3. + (2.*ft4)/3. + (2.*ft5)/3. + (2.*ft6)/3. + 8.*ft9 + 8.*ft12;
+	  f10= (2.*ft1)/3. + (2.*ft2)/3. + (2.*ft3)/3. + (2.*ft4)/3. + (2.*ft5)/3. + (2.*ft6)/3. + 8.*ft10 + 8.*ft11;
+	  f11= (2.*ft1)/3. + (2.*ft2)/3. + (2.*ft3)/3. + (2.*ft4)/3. + (2.*ft5)/3. + (2.*ft6)/3. + 8.*ft10 + 8.*ft11;
+	  f12= (2.*ft1)/3. + (2.*ft2)/3. + (2.*ft3)/3. + (2.*ft4)/3. + (2.*ft5)/3. + (2.*ft6)/3. + 8.*ft9 + 8.*ft12;
+	  f13= (2.*ft1)/3. + (2.*ft2)/3. + (2.*ft3)/3. + (2.*ft4)/3. + (2.*ft5)/3. + (2.*ft6)/3. + 8.*ft8 + 8.*ft13;
+	  f14= (2.*ft1)/3. + (2.*ft2)/3. + (2.*ft3)/3. + (2.*ft4)/3. + (2.*ft5)/3. + (2.*ft6)/3. + 8.*ft7 + 8.*ft14;
+
+	  //update fIn for all velocities based on strain tensor
+	  //f0, still equals 0..
+	  cu = 9./2.; w = 1./9.;
+
+	  //fIn[..] = fe#+f#
+	  f0=fe0+f0;
+
+	  f1=fe1+f1*(cu)*w;
+	  f2=fe2+f2*(cu)*w;
+	  f3=fe3+f3*cu*w;
+	  f4=fe4+f4*cu*w;
+	  f5=fe5+f5*cu*w;
+	  f6=fe6+f6*cu*w;
+	  w = 1./72.;
+	  f7=fe7+f7*cu*w;
+	  f8=fe8+f8*cu*w;
+	  f9=fe9+f9*cu*w;
+	  f10=fe10+f10*cu*w;
+	  f11=fe11+f11*cu*w;
+	  f12=fe12+f12*cu*w;
+	  f13=fe13+f13*cu*w;
+	  f14=fe14+f14*cu*w;
+	}
+
+	//everyone relax...
+	f0=f0-omega*(f0-fe0);
+	f1=f1-omega*(f1-fe1);
+	f2=f2-omega*(f2-fe2);
+	f3=f3-omega*(f3-fe3);
+	f4=f4-omega*(f4-fe4);
+	f5=f5-omega*(f5-fe5);
+	f6=f6-omega*(f6-fe6);
+	f7=f7-omega*(f7-fe7);
+	f8=f8-omega*(f8-fe8);
+	f9=f9-omega*(f9-fe9);
+	f10=f10-omega*(f10-fe10);
+	f11=f11-omega*(f11-fe11);
+	f12=f12-omega*(f12-fe12);
+	f13=f13-omega*(f13-fe13);
+	f14=f14-omega*(f14-fe14);
+	// stream data
                 
                 //speed 0 ex=ey=ez=0
                 //fOut[tid]=f0;
