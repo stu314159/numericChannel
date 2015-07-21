@@ -6,6 +6,12 @@ clc
 % If flip = 1, ensure that the airfoil points are initially defined in a counterclockwise direction. If
 % they are not, make sq_frac negative.
 
+% add path to geom2d toolbox
+addpath('./geom2d','./geom2d/geom2d','./geom2d/geom2d/private');
+addpath('./geom2d/polygons2d','./geom2d/polygons2d/private');
+addpath('./geom2d/polynomialCurves2d');
+
+
 %% CHOOSE GEOMETRY
 fprintf('loading the airfoil geometry data.\n');
 % Airfoil
@@ -476,12 +482,12 @@ figure(1)
 % else
 % end
 
-scatter3(gcoord(gnn,1),gcoord(gnn,2),gcoord(gnn,3),'filled','k');
-if sq_on == 1
-    hold on
-    scatter3(gcoord(gnn_sq,1),gcoord(gnn_sq,2),gcoord(gnn_sq,3),'filled','r');
-    hold off
-end
+%scatter3(gcoord(gnn,1),gcoord(gnn,2),gcoord(gnn,3),'filled','k');
+%if sq_on == 1
+%    hold on
+%    scatter3(gcoord(gnn_sq,1),gcoord(gnn_sq,2),gcoord(gnn_sq,3),'filled','r');
+%    hold off
+%end
 
 
 if sq_on == 1
