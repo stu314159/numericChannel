@@ -7,8 +7,8 @@ clc
 % they are not, make sq_frac negative.
 
 % add path to geom2d toolbox
-addpath('./geom2d','./geom2d/geom2d','./geom2d/geom2d/private');
-addpath('./geom2d/polygons2d','./geom2d/polygons2d/private');
+addpath('./geom2d','./geom2d/geom2d');
+addpath('./geom2d/polygons2d');
 addpath('./geom2d/polynomialCurves2d');
 
 
@@ -461,9 +461,9 @@ gnn_sq = find(ismember(gcoord,inside_matrix_sq,'rows'));
 
 
 
-fprintf('Plotting the results.\n');
+%fprintf('Plotting the results.\n');
 % Plot the solid nodes with global node numbers in the gnn array
-figure(1)
+%figure(1)
 % % Plot blade nodes in black
 % i=1;
 % for i=1:length(gnn)
