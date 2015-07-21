@@ -55,12 +55,6 @@ void OpenChannel3D::write_data(MPI_Comm comm, bool isEven){
     MPI_File fh_rho, fh_ux, fh_uy, fh_uz;
     MPI_Status mpi_s1, mpi_s2, mpi_s3,mpi_s4;
     
-    //	// create temporary data buffers
-    //	float * rho_l = new float[numEntries];
-    //	float * ux_l = new float[numEntries];
-    //	float * uy_l = new float[numEntries];
-    //	float * uz_l = new float[numEntries];
-    
     float * fOut;
     if (isEven){
         fOut = fEven;
@@ -177,9 +171,7 @@ void OpenChannel3D::D3Q15_process_slices(bool isEven, const int firstSlice, cons
     int nnodes = this->nnodes;
     
     dummyUse(nnodes);
-    
-    
-    //Nz=lastSlice-firstSlice;
+   
     const int numSpd=15;
     #pragma omp parallel for collapse(3)
     #pragma acc parallel loop collapse(3) \
@@ -196,14 +188,6 @@ void OpenChannel3D::D3Q15_process_slices(bool isEven, const int firstSlice, cons
                 tid=X+Y*Nx+Z*Nx*Ny;
                 
                 //load the data into registers
-                // f0=fIn[tid]; f1=fIn[Nx*Ny*Nz+tid];
-                // f2=fIn[2*Nx*Ny*Nz+tid]; f3=fIn[3*Nx*Ny*Nz+tid];
-                // f4=fIn[4*Nx*Ny*Nz+tid]; f5=fIn[5*Nx*Ny*Nz+tid];
-                // f6=fIn[6*Nx*Ny*Nz+tid]; f7=fIn[7*Nx*Ny*Nz+tid];
-                // f8=fIn[8*Nx*Ny*Nz+tid]; f9=fIn[9*Nx*Ny*Nz+tid];
-                // f10=fIn[10*Nx*Ny*Nz+tid]; f11=fIn[11*Nx*Ny*Nz+tid];
-                // f12=fIn[12*Nx*Ny*Nz+tid]; f13=fIn[13*Nx*Ny*Nz+tid];
-                // f14=fIn[14*Nx*Ny*Nz+tid];
                 f0=fIn[getIdx(nnodes, numSpd, tid,0)]; f1=fIn[getIdx(nnodes, numSpd, tid,1)];
                 f2=fIn[getIdx(nnodes, numSpd, tid,2)]; f3=fIn[getIdx(nnodes, numSpd, tid,3)];
                 f4=fIn[getIdx(nnodes, numSpd, tid,4)]; f5=fIn[getIdx(nnodes, numSpd, tid,5)];
@@ -660,10 +644,6 @@ void OpenChannel3D::initialize_local_partition_variables(){
     inl = new int[nnodes];
     onl = new int[nnodes];
     u_bc = new float[nnodes];
-    
-    // cout << "rank: " << rank << "In initialize_local_partition_variables:" << endl << " fEven = " << fEven << endl;
-    // cout << "rank: " << rank << " fOdd = " << fOdd << endl;
-    
     nd_m = rank-1;
     if(nd_m<0)
     nd_m=(size-1);
@@ -680,7 +660,6 @@ void OpenChannel3D::initialize_local_partition_variables(){
                 tid=x+y*Nx+z*Nx*Ny;
                 for(int spd=0;spd<numSpd;spd++){
                     fEven[getIdx(nnodes, numSpd, tid,spd)]=rho_lbm*w[spd];
-                   //fOdd[getIdx(nnodes, numSpd, tid,spd)]=rho_lbm*w[spd];
                 }
             }
         }
@@ -794,11 +773,6 @@ void OpenChannel3D::read_input_file(const string input_file){
     input_params >> Num_ts;
     input_params >> ts_rep_freq;
     input_params >> plot_freq;
-    /*input_params >> obst_type;
-    input_params >> obst_param1;
-    input_params >> obst_param2;
-    input_params >> obst_param3;
-    input_params >> obst_param4;*/
     input_params >> rho_lbm;
     input_params >> umax_lbm;
     input_params >> omega;
