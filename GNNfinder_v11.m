@@ -29,7 +29,7 @@ flip = 1;
     else
     end
 % Lattice Inputs
-Ny_divs = 45;
+Ny_divs = 65;
 Lx_p = 4;
 Ly_p = 3;
 Lz_p = 14;
