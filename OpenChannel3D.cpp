@@ -777,15 +777,16 @@ void OpenChannel3D::initialize_local_partition_variables(){
     }
     
     // initialize u_bc
-    float b = ((float)Ny-1.)/2.;
-    float h;
+    //float b = ((float)Ny-1.)/2.;
+    //float h;
     for(int z=0;z<totalSlices;z++){
         for(int y=0;y<Ny;y++){
             for(int x=0;x<Nx;x++){
                 tid=x+y*Nx+z*Nx*Ny;
                 if((inl[tid]==1)|(onl[tid]==1)){
-                    h=((float)y-b)/b;
-                    u_bc[tid]=umax_lbm*(1.-(h*h));
+      //              h=((float)y-b)/b;
+      //              u_bc[tid]=umax_lbm*(1.-(h*h));
+                  u_bc[tid]=umax_lbm;
                 }else{
                     u_bc[tid]=0.;
                 }
