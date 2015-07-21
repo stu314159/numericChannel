@@ -1,0 +1,25 @@
+#!/bin/bash
+##Required PBS Directives
+#PBS -A USNAM37752431
+#PBS -q gpu
+#PBS -l select=16:ncpus=10:accelerator_model=Tesla_K40s:mpiprocs=1
+#PBS -l walltime=01:00:00
+#PBS -N ACC_16_pgi
+#PBS -j oe
+#PBS -l ccm=1
+
+JID=`echo $PBS_JOBID | cut -d. -f1`
+JOBDIR=/p/work1/$LOGNAME/${JID}.SHEPARD
+mkdir $JOBDIR
+
+cp $PBS_O_WORKDIR/WMBrick3D $JOBDIR
+cp $PBS_O_WORKDIR/*.lbm $JOBDIR
+cp $PBS_O_WORKDIR/*.npy $JOBDIR
+cp $PBS_O_WORKDIR/validate_r3.py $JOBDIR
+cp $PBS_O_WORKDIR/process_lbm_data.py $JOBDIR
+cp $PBS_O_WORKDIR/vtkHelper.py $JOBDIR
+
+cd $JOBDIR
+export OMP_NUM_THREADS=10
+
+aprun -B ./WMBrick3D

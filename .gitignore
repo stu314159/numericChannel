@@ -1,0 +1,8 @@
+*.[oa]
+*~
+*.lbm
+*.ptx
+*.lst
+*.cub
+*.o*
+WMBrick3D
