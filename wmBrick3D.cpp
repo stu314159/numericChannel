@@ -65,6 +65,7 @@ int main(int argc, char * argv[])
     {
         // write initial data
         // (data processing script will be expecting it)
+        
         pp.write_data(MPI_COMM_WORLD,true);
         
         double time_start, time_end, ex_time, LPU_sec, gNumLP;

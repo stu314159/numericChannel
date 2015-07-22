@@ -4,7 +4,7 @@
 #PBS -q gpu
 #PBS -l select=4:ncpus=10:accelerator_model=Tesla_K40s:mpiprocs=1
 #PBS -l walltime=01:00:00
-#PBS -N ACC_4_pgi
+#PBS -N WMBturb_4_pgi
 #PBS -j oe
 #PBS -l ccm=1
 

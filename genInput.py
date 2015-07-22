@@ -21,32 +21,15 @@ You can get more detailed data if you increase the plot_freq.
 
 Some suggested problem inputs:
 
-# debug
-Num_ts = 2
-ts_rep_freq = 1
-plot_freq = 1
-Ny_divs = 5
-
-# Small -- to make sure everything is running right:
+To compare with non-turbulent version
 Num_ts = 2000
-ts_rep_freq = 100
-plot_freq = 500
-Ny_divs = 15
-
-
-# Medium - to get a feel for how long codes will take to run as the problem size is increased:
-Num_ts = 10000
-ts_rep_freq = 500
-plot_freq = 5000
-Ny_divs = 25
-
-# Large - for benchmarking performance scaling
-Num_ts = 30000
 ts_rep_freq = 1000
-plot_freq = 29999
-Ny_divs = 40
-
-
+Warmup_ts = 0
+plot_freq = 500
+Ny_divs = 25
+Re = 67
+dt = .0025
+Cs = 0
 
 
 """
