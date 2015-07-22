@@ -4,6 +4,7 @@
 #include <string>
 #include <sstream>
 #include <stdexcept>
+#include <cmath>
 #include "workArounds.h"
 
 // for debugging
@@ -167,9 +168,10 @@ void OpenChannel3D::D3Q15_process_slices(bool isEven, const int firstSlice, cons
     float* u_bc = this->u_bc;
     int Ny = this->Ny;
     int Nx = this->Nx;
-    float omega = this->omega;
+    float omega_l = this->omega;
     int nnodes = this->nnodes;
     float rho_lbm = this->rho_lbm;
+    float Cs = this->Cs;
     
     dummyUse(nnodes);
    
@@ -389,6 +391,30 @@ void OpenChannel3D::D3Q15_process_slices(bool isEven, const int firstSlice, cons
 		  f13=fe13+f13*cu*w;
 		  f14=fe14+f14*cu*w;
 		}
+
+                // compute strain tensor and update local viscosity/relaxation factor accordingly
+                float s11,s12,s13,s22,s23,s33;
+		s11=(f1-fe1)+(f2-fe2)+(f7-fe7)+(f8-fe8)+(f9-fe9)+(f10-fe10)+(f11-fe11)+(f12-fe12)+(f13-fe13)+(f14-fe14);
+		s12=(f7-fe7)-(f8-fe8)-(f9-fe9)+(f10-fe10)+(f11-fe11)-(f12-fe12)-(f13-fe13)+(f14-fe14);
+		s13=(f7-fe7)-(f8-fe8)+(f9-fe9)-(f10-fe10)-(f11-fe11)+(f12-fe12)-(f13-fe13)+(f14-fe14);
+		s22=(f3-fe3)+(f4-fe4)+(f7-fe7)+(f8-fe8)+(f9-fe9)+(f10-fe10)+(f11-fe11)+(f12-fe12)+(f13-fe13)+(f14-fe14);
+		s23=(f7-fe7)+(f8-fe8)-(f9-fe9)-(f10-fe10)-(f11-fe11)-(f12-fe12)+(f13-fe13)+(f14-fe14);
+		s33=(f5-fe5)+(f6-fe6)+(f7-fe7)+(f8-fe8)+(f9-fe9)+(f10-fe10)+(f11-fe11)+(f12-fe12)+(f13-fe13)+(f14-fe14);
+		
+                   
+		float nu = 1./omega_l; nu-=0.5; nu/=3.;
+		float P = s11*s11+2.*s12*s12+2.*s13*s13+s22*s22+2.*s23*s23+s33*s33;
+		P = sqrt(P);
+		P*=Cs;
+		P+=nu*nu;
+		P=sqrt(P);
+		P-=nu;
+
+		//compute turbulent nu
+		float nu_e = (1./(6.))*P;
+		//update omega
+		    
+		float omega = 1./(3.*(nu+nu_e)+0.5); //<-- shadows class data member this->omega
 
 		//everyone relax...
 		f0=f0-omega*(f0-fe0);
