@@ -2,22 +2,18 @@
 import math
 import argparse
 import numpy as np
+import scipy.io
 
 """
-Input file generator for the LBM code for 3D flow past a wall mounted brick.
+Input file generator for the LBM code for 3D flow past an obstacle whose geometry is described
+by 'turbine_blade.mat'
 
 Num_ts = total number of LBM time steps to execute
 ts_rep_frequency = time-step reporting frequency. (LBM code gives periodic updates on progress)
+Warmup_ts = number of time steps to take before recording data
 plot_freq = number of time-steps between data dumps on pressure and velocity
-Ny_divs = number of lattice points across the entrance of the channel
-
-The code is set below to provide inputs that will help ensure stable LBM execution,
-but reliable data will be produced only if the reported LBM flow mach number
-is less than 0.1.  I recommend you do not procede with actually performing
-the simulation unless this is the case.
-
-Otherwise, more accurate results will be obtained as you increase Ny_divs.
-You can get more detailed data if you increase the plot_freq.
+Re = Flow Reynolds number
+Cs = Turbulence model parameter
 
 Some suggested problem inputs:
 
@@ -26,10 +22,22 @@ Num_ts = 2000
 ts_rep_freq = 1000
 Warmup_ts = 0
 plot_freq = 500
-Ny_divs = 25
 Re = 67
 dt = .0025
 Cs = 0
+
+For some initial problem testing:
+Num_ts = 30000
+ts_rep_freq = 1000
+Warmup_ts = 0
+plot_freq = 10000
+Re = 5000
+dt = 0.0005
+Cs = 2
+
+For longer testing with turbulent flow simulations that you expect to run stably,
+conduct an appropriate warmup period (you should determine this with preliminary runs)
+followed by a comparatively short number of time steps during which you collect data frequently.
 
 
 """
@@ -41,7 +49,6 @@ parser.add_argument('Num_ts',type=int)
 parser.add_argument('ts_rep_freq',type=int)
 parser.add_argument('Warmup_ts',type=int)
 parser.add_argument('plot_freq',type=int)
-parser.add_argument('Ny_divs',type=int)
 parser.add_argument('Re',type=float)
 parser.add_argument('dt',type=float)
 parser.add_argument('Cs',type=float)
@@ -53,7 +60,6 @@ Num_ts = args.Num_ts
 ts_rep_freq = args.ts_rep_freq
 Warmup_ts = args.Warmup_ts
 plot_freq = args.plot_freq
-Ny_divs = args.Ny_divs
 Re = args.Re
 dt = args.dt
 Cs = args.Cs
@@ -63,21 +69,14 @@ Cs = args.Cs
 
 #----You should not have to edit anything below this line -------------------
 
-
+turb_input = scipy.io.loadmat('turbine_blade.mat')
 # overall domain dimensions
-Lx_p = 4. # "thickness"
-Ly_p = 3. # "height"
-Lz_p = 14. # "length"
-
-# describe brick dimensions and location
-h_brick = 1.
-z_brick = 6.
-x_brick = 2.
-
-
-# for now, just doing Poiseuille flow.
-Lo = h_brick;#characteristic length is block height
-R=0; x_c = 0; z_c = 0;# not used.
+Lx_p = float(turb_input['Lx_p'])
+Ly_p = float(turb_input['Ly_p'])
+Lz_p = float(turb_input['Lz_p'])
+Lo = float(turb_input['Lo'])
+Ny_divs = int(turb_input['Ny_divs'])
+obstList = list((turb_input['gnn']).flatten())
 
 Ny = math.ceil((Ny_divs-1)*(Ly_p/Lo))+1
 Nx = math.ceil((Ny_divs-1)*(Lx_p/Lo))+1
@@ -94,23 +93,6 @@ Y,Z,X = np.meshgrid(y,z,x);
 XX = np.reshape(X,numEl)
 YY = np.reshape(Y,numEl)
 ZZ = np.reshape(Z,numEl)
-
-
-print 'Computing global node numbers within the wall mounted brick'
-x_h = np.argwhere(XX >= (x_brick - h_brick/2.))
-x_l = np.argwhere(XX <= (x_brick + h_brick/2.))
-
-ol = np.unique(np.intersect1d(x_h,x_l))
-
-y_h = np.argwhere(YY <= (h_brick))
-ol = np.unique(np.intersect1d(ol,y_h))
-
-z_l = np.argwhere(ZZ >= (z_brick-h_brick/2.))
-ol = np.unique(np.intersect1d(ol,z_l))
-
-z_h = np.argwhere(ZZ <= (z_brick+h_brick/2.))
-obstList = np.unique(np.intersect1d(ol,z_h))
-
 
 print 'There are %d nodes in the obstacle'%len(obstList)
 print 'Writing those nodes to file'
