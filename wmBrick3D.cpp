@@ -79,7 +79,7 @@ int main(int argc, char * argv[])
             }
             pp.take_lbm_timestep(ts%2==0,MPI_COMM_WORLD); // weird function call sig.
             
-            if((ts+1)%(pp.plot_freq)==0){
+            if(((ts+1)%(pp.plot_freq)==0) & ((ts+1)>= pp.Warmup_ts)){
                 // write data at requested intervals.
                 pp.write_data(MPI_COMM_WORLD,ts%2==0);
             }

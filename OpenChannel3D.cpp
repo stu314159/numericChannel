@@ -805,7 +805,9 @@ void OpenChannel3D::read_input_file(const string input_file){
     input_params >> LatticeType;
     input_params >> Num_ts;
     input_params >> ts_rep_freq;
+    input_params >> Warmup_ts;
     input_params >> plot_freq;
+    input_params >> Cs;
     input_params >> rho_lbm;
     input_params >> umax_lbm;
     input_params >> omega;
