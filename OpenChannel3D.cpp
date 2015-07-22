@@ -747,16 +747,16 @@ void OpenChannel3D::initialize_local_partition_variables(){
     }
     
     // near and far wall
-    //for(int z=0;z<totalSlices;z++){
-    //    for(int y=0;y<Ny;y++){
-    //        x = 0;
-    //        tid_l = x+y*Nx+z*Nx*Ny;
-    //        snl[tid_l]=1;
-    //        x = (Nx-1);
-    //        tid_l = x+y*Nx+z*Nx*Ny;
-    //        snl[tid_l]=1;
-    //    }
-    //}
+    for(int z=0;z<totalSlices;z++){
+        for(int y=0;y<Ny;y++){
+            x = 0;
+            tid_l = x+y*Nx+z*Nx*Ny;
+            snl[tid_l]=1;
+            x = (Nx-1);
+            tid_l = x+y*Nx+z*Nx*Ny;
+            snl[tid_l]=1;
+        }
+    }
     
     // Due to how the domain is partitioned, the inlet nodes
     // are all assigned to rank 0 process
