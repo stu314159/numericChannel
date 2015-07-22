@@ -21,12 +21,10 @@ public:
 	int LatticeType;
 	int Num_ts;
 	int ts_rep_freq;
+        int Warmup_ts;
 	int plot_freq;
-	/*int obst_type;
-	float obst_param1;
-	float obst_param2;
-	float obst_param3;
-	float obst_param4;*/
+        float Cs;
+	
 	float rho_lbm;
 	float umax_lbm;
 	float omega;
