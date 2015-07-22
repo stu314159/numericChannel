@@ -56,23 +56,31 @@ Ny_divs = 40
 parser = argparse.ArgumentParser(prog='genInput.py',description='Process LBM input arguments')
 parser.add_argument('Num_ts',type=int)
 parser.add_argument('ts_rep_freq',type=int)
+parser.add_argument('Warmup_ts',type=int)
 parser.add_argument('plot_freq',type=int)
 parser.add_argument('Ny_divs',type=int)
+parser.add_argument('Re',type=float)
+parser.add_argument('dt',type=float)
+parser.add_argument('Cs',type=float)
 # parse input arguments
 args = parser.parse_args()
 
 # assign to required variables
 Num_ts = args.Num_ts
 ts_rep_freq = args.ts_rep_freq
+Warmup_ts = args.Warmup_ts
 plot_freq = args.plot_freq
 Ny_divs = args.Ny_divs
+Re = args.Re
+dt = args.dt
+Cs = args.Cs
 
 
 
 
 #----You should not have to edit anything below this line -------------------
 
-Re = 67.
+
 # overall domain dimensions
 Lx_p = 4. # "thickness"
 Ly_p = 3. # "height"
@@ -106,15 +114,20 @@ ZZ = np.reshape(Z,numEl)
 
 
 print 'Computing global node numbers within the wall mounted brick'
-# to do:  identify the elements that lie within the obstacle
-# bone-headed way:
-obstList = []
-for gid in range(int(numEl)):
-    xG = XX[gid]; yG = YY[gid]; zG = ZZ[gid];
-    if ((xG>= (x_brick - h_brick/2.)) and (xG <= (x_brick + h_brick/2.)) \
-        and (yG <= h_brick)  and (zG >= (z_brick-h_brick/2.)) and \
-        (zG <= (z_brick + h_brick/2.))):
-        obstList.append(gid)
+x_h = np.argwhere(XX >= (x_brick - h_brick/2.))
+x_l = np.argwhere(XX <= (x_brick + h_brick/2.))
+
+ol = np.unique(np.intersect1d(x_h,x_l))
+
+y_h = np.argwhere(YY <= (h_brick))
+ol = np.unique(np.intersect1d(ol,y_h))
+
+z_l = np.argwhere(ZZ >= (z_brick-h_brick/2.))
+ol = np.unique(np.intersect1d(ol,z_l))
+
+z_h = np.argwhere(ZZ <= (z_brick+h_brick/2.))
+obstList = np.unique(np.intersect1d(ol,z_h))
+
 
 print 'There are %d nodes in the obstacle'%len(obstList)
 print 'Writing those nodes to file'
@@ -138,19 +151,16 @@ Uavg = Uo
 Ld = 1.; Td = 1.; Ud = (To/Lo)*Uavg;
 nu_d = 1./Re
 dx = 1./(Ny_divs - 1.)
-# set omega as a constant at 1.6
-omega = 1.74935
-nu_lbm = ((1./omega) - 0.5)/3.
-dt = nu_lbm*(dx**2)/nu_d
 u_lbm = (dt/dx)*Ud
-
+nu_lbm = (dt/(dx**2))*nu_d
+omega = 1./(3.*nu_lbm+0.5)
 
 u_conv_fact = (dx/dt)*(Lo/To)
 t_conv_fact = (dt*To)
 l_conv_fact = dx*Lo
 p_conv_fact = ((l_conv_fact/t_conv_fact)**2)*(1./3.)
 
-rho_lbm = rho_p
+rho_lbm = rho_p*(l_conv_fact**3)
 
 
 
@@ -174,19 +184,14 @@ if run_dec!='n' and run_dec!='N':
     params = open('params.lbm','w')
     params.write('%d \n'%1) # lattice selection (keep.  We might actually use this)
     
-    
-    #params.write('%d \n'%1) # dynamics (not needed - add later if used)
-    #params.write('%d \n'%0) # entropic (boolean) ( not needed )
-    #params.write('%d \n'%0) # initialization (not needed)
-    
-    
     params.write('%d \n'%Num_ts)
     params.write('%d \n'%ts_rep_freq)
+    params.write('%d \n'%Warmup_ts)
     params.write('%d \n'%plot_freq)
-   
-    params.write('%f \n'%rho_lbm) # density
-    params.write('%f \n'%u_lbm) # scaled maximum velocity
-    params.write('%f \n'%omega) # relaxation parameter
+    params.write('%g \n'%Cs)
+    params.write('%g \n'%rho_lbm) # density
+    params.write('%g \n'%u_lbm) # scaled maximum velocity
+    params.write('%g \n'%omega) # relaxation parameter
     params.write('%d \n'%Nx) # number of nodes in the x, y and z direction
     params.write('%d \n'%Ny)
     params.write('%d \n'%Nz)
@@ -201,9 +206,6 @@ if run_dec!='n' and run_dec!='N':
     params.write('%f \n'%t_conv_fact)  # time, length and pressure conversion factors
     params.write('%f \n'%l_conv_fact)
     params.write('%g \n'%p_conv_fact)
-    
-    
-    
     
     params.close()
     
