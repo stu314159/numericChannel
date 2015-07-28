@@ -127,8 +127,8 @@ p_conv_fact = (((l_conv_fact/t_conv_fact)**2)*(1./3.))/(l_conv_fact**3)
 
 rho_lbm = rho_p*(l_conv_fact**3)
 
-
-
+print 'l_conv_fact = %g.\n'%l_conv_fact
+print 'p_conv_fact = %g.\n'%p_conv_fact
 
 
 print 'Number of lattice points = %d.' % nnodes

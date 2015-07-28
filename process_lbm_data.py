@@ -63,7 +63,7 @@ YY = np.reshape(Y,numEl)
 ZZ = np.reshape(Z,numEl)
 
 # compute the number of data dumps I expect to process
-nDumps = Num_ts/plot_freq + 1 # initial data plus Num_ts/plot_freq updates
+nDumps = (Num_ts-Warmup_ts)/plot_freq + 1 # initial data plus Num_ts/plot_freq updates
 
 # load obst_file.lbm to get the obstacle.  Should also zero out the velocity of
 # the walls.
