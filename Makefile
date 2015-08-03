@@ -4,7 +4,7 @@ ifeq ($(PE_ENV),PGI)
 endif
 
 ifeq ($(PE_ENV),INTEL)
-        MPI_FLAGS=-O3 -openmp
+        MPI_FLAGS=-O3 -openmp -Minfo=all
 endif
 
 ifeq ($PE_ENV),CRAY)
