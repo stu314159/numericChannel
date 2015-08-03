@@ -62,31 +62,27 @@ void OpenChannel3D::write_data(MPI_Comm comm, bool isEven){
         fOut = fOdd;
     }
     
-    int nnodes = this->nnodes;
-    int numSpd = this->numSpd;
-    int Nx = this->Nx;
-    int Ny = this->Ny;
-    const float * ex = this->ex;
-    const float * ey = this->ey;
-    const float * ez = this->ez;
-    float * ux_l = this->ux_l;
-    float * uy_l = this->uy_l;
-    float * uz_l = this->uz_l;
-    float * rho_l = this->rho_l;
-    int totalSlices = this->totalSlices;
-    int * snl = this->snl;
-    int numMySlices = this->numMySlices;
+    //int nnodes = this->nnodes;
+    //int numSpd = this->numSpd;
+    //int Nx = this->Nx;
+    //int Ny = this->Ny;
+    //const float * ex = this->ex;
+    //const float * ey = this->ey;
+    //const float * ez = this->ez;
+    //float * ux_l = this->ux_l;
+    //float * uy_l = this->uy_l;
+    //float * uz_l = this->uz_l;
+    //float * rho_l = this->rho_l;
+    //int totalSlices = this->totalSlices;
+    //int * snl = this->snl;
+    //int numMySlices = this->numMySlices;
     int numEntries = Nx*Ny*numMySlices;
-    dummyUse(nnodes,numEntries);
-    
-    #pragma omp parallel for collapse(3)
-    #pragma acc parallel loop collapse(3) \
-        present(fOut[0:nnodes*numSpd], snl[0:nnodes]) \
-        copyout(ux_l[0:numEntries],uy_l[0:numEntries],uz_l[0:numEntries],rho_l[0:numEntries]) \
-        copyin(ex[0:numSpd],ey[0:numSpd],ez[0:numSpd])
-    for(int z = HALO;z<(totalSlices-HALO);z++){
-        for(int y = 0;y<Ny;y++){
-            for(int x = 0;x<Nx;x++){
+    //dummyUse(nnodes,numEntries);
+    int z,y,x;
+    #pragma omp parallel for collapse(3) private(x,y,z)
+    for(z = HALO;z<(totalSlices-HALO);z++){
+        for(y = 0;y<Ny;y++){
+            for(x = 0;x<Nx;x++){
                 int tid_l, tid_g;
                 float tmp_rho, tmp_ux, tmp_uy, tmp_uz;
                 tid_l = x+y*Nx+(z-HALO)*Nx*Ny;
@@ -161,27 +157,24 @@ void OpenChannel3D::D3Q15_process_slices(bool isEven, const int firstSlice, cons
     }
     
     // local copies of class data members needed for acc compiler
-    int* inl = this->inl;
-    int* onl = this->onl;
-    int* snl = this->snl;
-    float* u_bc = this->u_bc;
-    int Ny = this->Ny;
-    int Nx = this->Nx;
-    float omega = this->omega;
-    int nnodes = this->nnodes;
-    float rho_lbm = this->rho_lbm;
+   // int* inl = this->inl;
+   // int* onl = this->onl;
+   // int* snl = this->snl;
+  //  float* u_bc = this->u_bc;
+  //  int Ny = this->Ny;
+   // int Nx = this->Nx;
+   // float omega = this->omega;
+   // int nnodes = this->nnodes;
+  //  float rho_lbm = this->rho_lbm;
     
-    dummyUse(nnodes);
+  //  dummyUse(nnodes);
    
     const int numSpd=15;
-    #pragma omp parallel for collapse(3)
-    #pragma acc parallel loop collapse(3) \
-        present(fIn[0:nnodes*numSpd]) \
-        present(fOut[0:nnodes*numSpd]) \
-        present(inl[0:nnodes], onl[0:nnodes], snl[0:nnodes], u_bc[0:nnodes])
-    for(int Z=firstSlice;Z<lastSlice;Z++){
-        for(int Y=0;Y<Ny;Y++){
-            for(int X=0;X<Nx;X++){
+    int Z,Y,X;
+    #pragma omp parallel for collapse(3) private(X,Y,Z)
+    for(Z=firstSlice;Z<lastSlice;Z++){
+        for(Y=0;Y<Ny;Y++){
+            for(X=0;X<Nx;X++){
                 float f0,f1,f2,f3,f4,f5,f6,f7,f8,f9,f10,f11,f12,f13,f14;
                 float cu,rho,ux,uy,uz,w;
                 int X_t,Y_t,Z_t,tid_t,tid;
@@ -534,10 +527,10 @@ void OpenChannel3D::D3Q15_process_slices(bool isEven, const int firstSlice, cons
 }
 
 void OpenChannel3D::stream_out_collect(bool isEven,const int z_start,float * buff_out, const int numStreamSpeeds, const int * streamSpeeds){
-    int Ny = this->Ny;
-    int Nx = this->Nx;
-    int numSpd = this->numSpd;
-    int nnodes = this->nnodes;
+    //int Ny = this->Ny;
+    //int Nx = this->Nx;
+    //int numSpd = this->numSpd;
+    //int nnodes = this->nnodes;
     
     float * fIn_b;
     if(isEven) {
@@ -546,15 +539,12 @@ void OpenChannel3D::stream_out_collect(bool isEven,const int z_start,float * buf
       fIn_b = fEven;
     }
     
-    dummyUse(nnodes,numSpd);
-    
-    #pragma acc parallel loop collapse(3) \
-        present(streamSpeeds[0:numStreamSpeeds]) \
-        present(fIn_b[0:nnodes*numSpd]) \
-        copyout(buff_out[0:Nx*Ny*numStreamSpeeds*HALO])
-    for(int z=0;z<HALO;z++){
-        for(int y=0;y<Ny;y++){
-            for(int x=0;x<Nx;x++){
+    //dummyUse(nnodes,numSpd);
+    int x,y,z;
+    #pragma omp parallel for collapse(3) private(x,y,z)
+    for(z=0;z<HALO;z++){
+        for(y=0;y<Ny;y++){
+            for(x=0;x<Nx;x++){
                 for(int spd=0;spd<numStreamSpeeds;spd++){
                     int tid_l = x+y*Nx+z*Nx*Ny; int tid_g = x+y*Nx+(z+z_start)*Nx*Ny;
                     int stream_spd=streamSpeeds[spd];
@@ -566,10 +556,10 @@ void OpenChannel3D::stream_out_collect(bool isEven,const int z_start,float * buf
 }
 
 void OpenChannel3D::stream_in_distribute(bool isEven,const int z_start, const float * buff_in, const int numStreamSpeeds, const int * streamSpeeds){
-    int Nx = this->Nx;
-    int Ny = this->Ny;
-    int numSpd = this->numSpd;
-    int nnodes = this->nnodes;
+    //int Nx = this->Nx;
+    //int Ny = this->Ny;
+    //int numSpd = this->numSpd;
+    //int nnodes = this->nnodes;
     
     float * fIn_b;
     
@@ -579,14 +569,12 @@ void OpenChannel3D::stream_in_distribute(bool isEven,const int z_start, const fl
       fIn_b = fEven;
     }
     
-    dummyUse(nnodes,numSpd);
-    #pragma acc parallel loop collapse(3) \
-        present(streamSpeeds[0:numStreamSpeeds]) \
-        present(fIn_b[0:nnodes*numSpd]) \
-        copyin(buff_in[0:Nx*Ny*numStreamSpeeds*HALO])
-    for(int z=0;z<HALO;z++){
-        for(int y=0;y<Ny;y++){
-            for(int x=0;x<Nx;x++){
+    //dummyUse(nnodes,numSpd);
+    int x,y,z;
+   #pragma omp parallel for collapse(3) private(x,y,z)
+    for(z=0;z<HALO;z++){
+        for(y=0;y<Ny;y++){
+            for(x=0;x<Nx;x++){
                 for(int spd=0;spd<numStreamSpeeds;spd++){
                     int tid_l=x+y*Nx+z*Nx*Ny; int tid_g = x+y*Nx+(z+z_start)*Nx*Ny;
                     int stream_spd=streamSpeeds[spd];

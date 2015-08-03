@@ -1,17 +1,17 @@
 MPI_CC=CC
 ifeq ($(PE_ENV),PGI)
-	MPI_FLAGS=-O3 -fast -mp=nonuma
+	MPI_FLAGS=-O3 -fast -mp=nonuma -Minfo=mp 
 endif
 
 ifeq ($(PE_ENV),INTEL)
-        MPI_FLAGS=-O3 -openmp -Minfo=all
+        MPI_FLAGS=-O3 -openmp 
 endif
 
-ifeq ($PE_ENV),CRAY)
-        MPI_FLAGS=-O3 -h omp
+ifeq ($(PE_ENV),CRAY)
+        MPI_FLAGS=-O3 -homp
 endif
 
-ifeq ($PE_ENV),GNU)
+ifeq ($(PE_ENV),GNU)
         MPI_FLAGS=-O3 -fopenmp
 endif
 

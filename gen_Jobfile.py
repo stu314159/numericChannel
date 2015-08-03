@@ -6,10 +6,10 @@ more automated generation of PBS jobfile
 jobfileName = 'wmb_jobfile.pbs'
 executableName = 'WMBrick3D'
 
-jobName = 'wmb_MPI_N32P8' # must be 15 characters or less
-nnodes = 32
+jobName = 'N4P8_intel' # must be 15 characters or less
+nnodes = 4
 ppn = 8 # for LBM jobs on the Cray XC30 machines, 8 ppn seems to saturate memory bandwidth.
-mpi_procs_per_node = ppn # only change this if you need more memory per process.
+mpi_procs_per_node = 1 # only change this if you need more memory per process.
 walltime='04:00:00'
 platform='SHEPARD'
 queue = 'standard'
@@ -60,7 +60,8 @@ for s in filesToCopy:
 #jf.write('cd $JOBDIR \n')  #<--- this was an error
 
 # invoke execution
-jf.write('aprun -n %d ./%s \n'%(mpi_procs,executableName))
+jf.write('export OMP_NUM_THREADS=%d \n'%ppn)
+jf.write('aprun -B ./%s \n'%(executableName))
 #jf.write('python ./%s \n'%proc_script)
 
 # create job to cleanup and archive data
