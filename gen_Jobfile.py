@@ -6,8 +6,8 @@ more automated generation of PBS jobfile
 jobfileName = 'wmb_jobfile.pbs'
 executableName = 'WMBrick3D'
 
-jobName = 'wmb_MPI_N4P8' # must be 15 characters or less
-nnodes = 4
+jobName = 'wmb_MPI_N32P8' # must be 15 characters or less
+nnodes = 32
 ppn = 8 # for LBM jobs on the Cray XC30 machines, 8 ppn seems to saturate memory bandwidth.
 mpi_procs_per_node = ppn # only change this if you need more memory per process.
 walltime='04:00:00'
