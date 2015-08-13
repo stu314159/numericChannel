@@ -1,3 +1,4 @@
+#!/app/COST/python/2.7.9/gnu/bin/python
 #process_lbm_data.py
 """
 Data processing script for LBM binary data files.
@@ -16,10 +17,15 @@ pressure and velocity magnitude scalar data and velocity vector data.
 
 """
 
-
+from mpi4py import MPI
 import numpy as np
 import math
 from vtkHelper import saveVelocityAndPressureVTK_binary as writeVTK
+
+
+comm = MPI.COMM_WORLD
+rank = comm.Get_rank()
+size = comm.Get_size()
 
 # Information about the LBM run that produced the data - I should get this from params.lbm
 
@@ -69,7 +75,7 @@ nDumps = (Num_ts-Warmup_ts)/plot_freq + 1 # initial data plus Num_ts/plot_freq u
 # the walls.
 
 
-for i in range(nDumps):
+for i in range(rank,nDumps,size):
     # say something comforting
     print 'processing data dump number %d of %d. '%(i+1,nDumps) # make this ones-based numbering
     # filename format
