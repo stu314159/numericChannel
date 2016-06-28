@@ -2,9 +2,9 @@
 ##Required PBS Directives
 #PBS -A USNAM37752431
 #PBS -q gpu
-#PBS -l select=24:ncpus=10:accelerator_model=Tesla_K40s:mpiprocs=1
+#PBS -l select=30:ncpus=10:accelerator_model=Tesla_K40s:mpiprocs=1
 #PBS -l walltime=01:00:00
-#PBS -N Re67_5blades
+#PBS -N Re700_5blds
 #PBS -j oe
 #PBS -l ccm=1
 

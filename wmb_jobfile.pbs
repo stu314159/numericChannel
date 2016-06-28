@@ -1,0 +1,25 @@
+#!/bin/bash 
+#PBS -A USNAM37752431 
+#PBS -q standard 
+#PBS -l select=4:ncpus=8:mpiprocs=1 
+#PBS -l walltime=04:00:00 
+#PBS -l ccm=1 
+#PBS -N N4P8_intel 
+#PBS -j oe 
+#PBS -V 
+#PBS -S /bin/bash 
+cd $WORKDIR
+JOBID=`echo $PBS_JOBID | cut -d '.' -f 1` 
+if [ ! -d $JOBID ]; then 
+  mkdir -p $JOBID 
+fi 
+cd $JOBID 
+cp $PBS_O_WORKDIR/WMBrick3D . 
+cp $PBS_O_WORKDIR/obst_file.lbm . 
+cp $PBS_O_WORKDIR/params.lbm . 
+cp $PBS_O_WORKDIR/process_lbm_data.py . 
+cp $PBS_O_WORKDIR/vtkHelper.py . 
+cp $PBS_O_WORKDIR/validate_r3.py . 
+cp $PBS_O_WORKDIR/gold_standard.npy . 
+export OMP_NUM_THREADS=8 
+aprun -B ./WMBrick3D 

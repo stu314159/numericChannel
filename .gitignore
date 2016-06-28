@@ -5,4 +5,5 @@
 *.lst
 *.cub
 *.o*
+*.mat
 WMBrick3D
